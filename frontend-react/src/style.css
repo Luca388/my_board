@@ -144,3 +144,7 @@ small,
     padding: 24px 16px;
   }
 }
+.message.error {
+  background: #fde8ea;
+  color: #8a1f2b;
+}

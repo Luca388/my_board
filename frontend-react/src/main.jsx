@@ -12,6 +12,7 @@ function App() {
     [password, setPassword] = useState("Classroom!2026");
   const [user, setUser] = useState(null),
     [message, setMessage] = useState("게시판을 불러오는 중입니다."),
+    [isError, setIsError] = useState(false),
     [busy, setBusy] = useState(false);
   const refresh = async () => setPosts(await api.list());
   async function run(action, success) {
@@ -19,9 +20,19 @@ function App() {
     try {
       await action();
       setMessage(success);
+      setIsError(false);
     } catch (e) {
+      // FE-03: 실패를 성공처럼 표시하지 않고 서버 code에 맞는 안내를 보여 줍니다.
       setMessage(e.message);
+      setIsError(true);
+      if (e.status === 404) {
+        // 글이 없으면 상세를 닫고 목록을 다시 불러옵니다.
+        setSelected(null);
+        reset();
+        await refresh().catch(() => {});
+      }
     } finally {
+      // 401이면 api.js가 세션을 지웠으므로 여기서 화면의 로그인 표시도 갱신됩니다.
       setUser(getSession().user);
       setBusy(false);
     }
@@ -43,22 +54,23 @@ function App() {
       setSelected(p);
       reset();
       await refresh();
-    }, "게시글을 저장했습니다.");
+    }, editing ? "기록을 수정했습니다." : "기록을 등록했습니다.");
   }
   return (
     <main>
       <header>
-        <span className="eyebrow">WEB SERVICE DESIGN · STARTER</span>
-        <h1>우리의 기록</h1>
+        <span className="eyebrow">FIXLOG · 개발 오류 해결 기록</span>
+        <h1>FixLog</h1>
         <p className="muted">
-          나만의 주제를 정하고, 로그인과 작성자 권한을 연결해 보세요.
+          개발하다 만난 오류와 해결 방법을 기록하고 공유하세요.
         </p>
       </header>
       <p className="banner">
-        시작 코드: 인증 미완성 · 글쓰기는 데모 작성자 Alice로 처리됩니다. 인증과
-        권한 검사를 완성한 뒤 안내 문구를 수정하세요.
+        누구나 기록을 읽을 수 있고, 로그인한 사용자만 새 기록을 남길 수 있습니다.
+        수정·삭제는 본인이 작성한 기록만 가능합니다. 로그인 상태는 이 탭에만
+        유지되며 새로고침하면 해제됩니다.
       </p>
-      <div role="status" className="message">
+      <div role="status" className={isError ? "message error" : "message"}>
         {message}
       </div>
       <div className="grid">
@@ -69,7 +81,10 @@ function App() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                run(() => login(email, password), "로그인했습니다.");
+                run(async () => {
+                  await login(email, password);
+                  reset();
+                }, "로그인했습니다.");
               }}
             >
               <label>
@@ -95,10 +110,13 @@ function App() {
                 <button
                   type="button"
                   className="secondary"
+                  disabled={!user}
                   onClick={() => {
                     clearSession();
                     setUser(null);
+                    reset();
                     setMessage("이 탭의 로그인 상태를 해제했습니다.");
+                    setIsError(false);
                   }}
                 >
                   로그아웃
@@ -127,7 +145,10 @@ function App() {
             </button>
           </section>
           <section className="card">
-            <h2>{editing ? "게시글 수정" : "새 글 작성"}</h2>
+            <h2>{editing ? "기록 수정" : "새 오류 기록"}</h2>
+            {!user && (
+              <p className="muted">기록을 남기려면 먼저 로그인하세요.</p>
+            )}
             <form onSubmit={save}>
               <label>
                 제목
@@ -135,6 +156,7 @@ function App() {
                   maxLength={100}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  placeholder="예: Spring Boot 시작 시 BeanCreationException"
                   required
                 />
               </label>
@@ -144,15 +166,16 @@ function App() {
                   maxLength={5000}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
+                  placeholder="증상, 원인, 해결 방법을 적어 주세요."
                   required
                 />
               </label>
               <div className="actions">
-                <button disabled={busy}>
+                <button disabled={busy || !user}>
                   {editing ? "수정 저장" : "등록"}
                 </button>
                 <button type="button" className="secondary" onClick={reset}>
-                  입력 초기화
+                  {editing ? "수정 취소" : "입력 초기화"}
                 </button>
               </div>
             </form>
@@ -161,10 +184,10 @@ function App() {
         <div>
           <section className="card">
             <h2>
-              게시글 목록 <small>{posts.length}개</small>
+              오류 기록 목록 <small>{posts.length}개</small>
             </h2>
             {posts.length === 0 ? (
-              <p>첫 번째 기록을 남겨 보세요.</p>
+              <p>첫 번째 오류 해결 기록을 남겨 보세요.</p>
             ) : (
               posts.map((p) => (
                 <article className="post" key={p.id}>
@@ -174,7 +197,7 @@ function App() {
                     onClick={() =>
                       run(
                         async () => setSelected(await api.detail(p.id)),
-                        "게시글을 불러왔습니다.",
+                        "기록을 불러왔습니다.",
                       )
                     }
                   >
@@ -190,14 +213,20 @@ function App() {
             )}
           </section>
           <section className="card">
-            <h2>게시글 상세</h2>
+            <h2>기록 상세</h2>
             {selected ? (
               <>
                 <h3>{selected.title}</h3>
                 <p className="content">{selected.content}</p>
                 <p>
-                  <small>작성자 {selected.authorName}</small>
+                  <small>
+                    작성자 {selected.authorName} · 작성{" "}
+                    {new Date(selected.createdAt).toLocaleString()}
+                    {selected.updatedAt !== selected.createdAt &&
+                      ` · 수정 ${new Date(selected.updatedAt).toLocaleString()}`}
+                  </small>
                 </p>
+                {/* FE-04: 본인 글에만 수정·삭제 버튼을 보여 줍니다. */}
                 {canEdit(selected) && (
                   <div className="actions">
                     <button
@@ -214,13 +243,13 @@ function App() {
                       className="danger"
                       disabled={busy}
                       onClick={() => {
-                        if (confirm("게시글을 삭제할까요?"))
+                        if (confirm("이 기록을 삭제할까요?"))
                           run(async () => {
                             await api.remove(selected.id);
                             setSelected(null);
                             reset();
                             await refresh();
-                          }, "게시글을 삭제했습니다.");
+                          }, "기록을 삭제했습니다.");
                       }}
                     >
                       삭제
