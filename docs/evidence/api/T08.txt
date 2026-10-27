@@ -1,0 +1,19 @@
+# T08 Bob이 Alice 글 삭제
+# 실행: 2026-10-27 22:22:50 · 서버 TOKEN_TTL=90
+
+## Bob 토큰으로 Alice 글 삭제
+$ curl -i -X DELETE http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <BOB_TOKEN>'
+HTTP/1.1 403 
+Content-Type: application/json
+
+{"code":"FORBIDDEN","message":"본인이 작성한 글만 수정·삭제할 수 있습니다."}
+-> 예상 403 FORBIDDEN / 실제 403 FORBIDDEN : PASS
+
+## 공개 재조회
+$ curl -i http://127.0.0.1:8000/api/posts/7
+HTTP/1.1 200 
+Content-Type: application/json
+
+{"id":7,"title":"[T07] Alice 원문 글","content":"이 글은 바뀌면 안 됩니다","authorId":1,"authorName":"Alice","createdAt":"2026-10-27T13:22:49.982007Z","updatedAt":"2026-10-27T13:22:49.982007Z"}
+-> 예상 200 / 실제 200 : PASS
+-> 데이터 확인(글 유지): PASS

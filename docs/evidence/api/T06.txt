@@ -1,0 +1,32 @@
+# T06 Alice 본인 글 수정·삭제
+# 실행: 2026-10-27 22:22:49 · 서버 TOKEN_TTL=90
+
+## Alice 본인 글 수정
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/6 -H 'Authorization: Bearer <ALICE_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"[T05] Alice 글 (수정)","content":"수정한 본문"}'
+HTTP/1.1 200 
+Content-Type: application/json
+
+{"id":6,"title":"[T05] Alice 글 (수정)","content":"수정한 본문","authorId":1,"authorName":"Alice","createdAt":"2026-10-27T13:22:49.697214Z","updatedAt":"2026-10-27T13:22:49.812731Z"}
+-> 예상 200 / 실제 200 : PASS
+
+## 수정 후 재조회
+$ curl -i http://127.0.0.1:8000/api/posts/6
+HTTP/1.1 200 
+Content-Type: application/json
+
+{"id":6,"title":"[T05] Alice 글 (수정)","content":"수정한 본문","authorId":1,"authorName":"Alice","createdAt":"2026-10-27T13:22:49.697214Z","updatedAt":"2026-10-27T13:22:49.812731Z"}
+-> 예상 200 / 실제 200 : PASS
+-> 데이터 확인(수정 내용 DB 반영): PASS
+
+## Alice 본인 글 삭제
+$ curl -i -X DELETE http://127.0.0.1:8000/api/posts/6 -H 'Authorization: Bearer <ALICE_TOKEN>'
+HTTP/1.1 204 
+-> 예상 204 / 실제 204 : PASS
+
+## 삭제 후 재조회
+$ curl -i http://127.0.0.1:8000/api/posts/6
+HTTP/1.1 404 
+Content-Type: application/json
+
+{"code":"NOT_FOUND","message":"게시글이 없습니다."}
+-> 예상 404 NOT_FOUND / 실제 404 NOT_FOUND : PASS

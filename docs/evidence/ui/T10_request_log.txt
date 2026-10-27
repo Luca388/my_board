@@ -1,0 +1,7 @@
+# T10 화면 만료 처리 — 서버 TOKEN_TTL=3, 4173 빌드 화면
+# fetch 호출을 감싸 요청 헤더와 상태만 기록(앱 코드 변경 없음). 토큰은 앞부분만 남기고 가림.
+POST /api/auth/login | Authorization: (헤더 없음) | → 200          ← Alice 로그인 ("Alice님 로그인 중")
+(5초 대기 후 글 등록 클릭)
+POST /api/posts | Authorization: Bearer eyJhbGciOi...(가림) | → 401   ← TOKEN_EXPIRED
+화면: "로그아웃 상태" / 메시지 "로그인 시간이 만료되었습니다. 다시 로그인하세요."
+입력값 유지: 제목 "[T10] 만료 후 작성 시도" 그대로 / 글 개수 5 → 5 (생성되지 않음)

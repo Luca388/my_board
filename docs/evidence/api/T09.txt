@@ -1,0 +1,51 @@
+# T09 서명 첫 글자를 바꾼 토큰
+# 실행: 2026-10-27 22:22:50 · 서버 TOKEN_TTL=90
+
+서명 부분 첫 글자 'b' → 'A' 로 변경한 토큰 사용
+
+## 변조 토큰 GET /me
+$ curl -i http://127.0.0.1:8000/api/me -H 'Authorization: Bearer <TAMPERED_TOKEN>'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"code":"INVALID_TOKEN","message":"유효하지 않은 토큰입니다. 다시 로그인하세요."}
+-> 예상 401 INVALID_TOKEN / 실제 401 INVALID_TOKEN : PASS
+
+## 변조 토큰 POST /posts
+$ curl -i -X POST http://127.0.0.1:8000/api/posts -H 'Authorization: Bearer <TAMPERED_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"변조 토큰 글","content":"x"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"code":"INVALID_TOKEN","message":"유효하지 않은 토큰입니다. 다시 로그인하세요."}
+-> 예상 401 INVALID_TOKEN / 실제 401 INVALID_TOKEN : PASS
+
+## 변조 토큰 PUT Alice 글
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <TAMPERED_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"변조","content":"변조"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"code":"INVALID_TOKEN","message":"유효하지 않은 토큰입니다. 다시 로그인하세요."}
+-> 예상 401 INVALID_TOKEN / 실제 401 INVALID_TOKEN : PASS
+
+## 변조 토큰 DELETE Alice 글
+$ curl -i -X DELETE http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <TAMPERED_TOKEN>'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"code":"INVALID_TOKEN","message":"유효하지 않은 토큰입니다. 다시 로그인하세요."}
+-> 예상 401 INVALID_TOKEN / 실제 401 INVALID_TOKEN : PASS
+
+## 공개 재조회
+$ curl -i http://127.0.0.1:8000/api/posts/7
+HTTP/1.1 200 
+Content-Type: application/json
+
+{"id":7,"title":"[T07] Alice 원문 글","content":"이 글은 바뀌면 안 됩니다","authorId":1,"authorName":"Alice","createdAt":"2026-10-27T13:22:49.982007Z","updatedAt":"2026-10-27T13:22:49.982007Z"}
+-> 예상 200 / 실제 200 : PASS
+-> 데이터 확인(원문 유지): PASS
+
+글 개수: 요청 전 4 / 요청 후 4

@@ -1,0 +1,58 @@
+# T10 짧은 TTL로 발급 후 실제 만료
+# 실행: 2026-10-27 22:22:52 · 서버 TOKEN_TTL=3
+
+TOKEN_TTL=3 으로 서버 재시작 → Alice·Bob 토큰 발급 → 5초 대기
+
+## 만료 토큰 GET /me
+$ curl -i http://127.0.0.1:8000/api/me -H 'Authorization: Bearer <EXPIRED_ALICE_TOKEN>'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"message":"로그인 시간이 만료되었습니다. 다시 로그인하세요.","code":"TOKEN_EXPIRED"}
+-> 예상 401 TOKEN_EXPIRED / 실제 401 TOKEN_EXPIRED : PASS
+
+## 만료 토큰 POST /posts
+$ curl -i -X POST http://127.0.0.1:8000/api/posts -H 'Authorization: Bearer <EXPIRED_ALICE_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"만료 토큰 글","content":"x"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"message":"로그인 시간이 만료되었습니다. 다시 로그인하세요.","code":"TOKEN_EXPIRED"}
+-> 예상 401 TOKEN_EXPIRED / 실제 401 TOKEN_EXPIRED : PASS
+
+## 만료 토큰 PUT 본인 글
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <EXPIRED_ALICE_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"만료","content":"만료"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"message":"로그인 시간이 만료되었습니다. 다시 로그인하세요.","code":"TOKEN_EXPIRED"}
+-> 예상 401 TOKEN_EXPIRED / 실제 401 TOKEN_EXPIRED : PASS
+
+## 만료 토큰 DELETE 본인 글
+$ curl -i -X DELETE http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <EXPIRED_ALICE_TOKEN>'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"message":"로그인 시간이 만료되었습니다. 다시 로그인하세요.","code":"TOKEN_EXPIRED"}
+-> 예상 401 TOKEN_EXPIRED / 실제 401 TOKEN_EXPIRED : PASS
+
+## Bob 만료 토큰으로 Alice 글 수정
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <EXPIRED_BOB_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"b","content":"b"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"message":"로그인 시간이 만료되었습니다. 다시 로그인하세요.","code":"TOKEN_EXPIRED"}
+-> 예상 401 TOKEN_EXPIRED / 실제 401 TOKEN_EXPIRED : PASS
+
+## 공개 재조회
+$ curl -i http://127.0.0.1:8000/api/posts/7
+HTTP/1.1 200 
+Content-Type: application/json
+
+{"id":7,"title":"[T07] Alice 원문 글","content":"이 글은 바뀌면 안 됩니다","authorId":1,"authorName":"Alice","createdAt":"2026-10-27T13:22:49.982007Z","updatedAt":"2026-10-27T13:22:49.982007Z"}
+-> 예상 200 / 실제 200 : PASS
+-> 데이터 확인(원문 유지): PASS

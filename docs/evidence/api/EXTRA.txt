@@ -1,0 +1,35 @@
+# EXTRA 여러 오류 조건이 겹칠 때
+# 실행: 2026-10-27 22:23:01 · 서버 TOKEN_TTL=90
+
+## 토큰 없이 없는 글 수정
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/99999 -H 'Content-Type: application/json' -d '{"title":"t","content":"c"}'
+HTTP/1.1 401 
+WWW-Authenticate: Bearer
+Content-Type: application/json
+
+{"code":"TOKEN_REQUIRED","message":"로그인이 필요합니다."}
+-> 예상 401 TOKEN_REQUIRED / 실제 401 TOKEN_REQUIRED : PASS
+
+## 정상 토큰으로 같은 없는 글 수정
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/99999 -H 'Authorization: Bearer <ALICE_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"t","content":"c"}'
+HTTP/1.1 404 
+Content-Type: application/json
+
+{"code":"NOT_FOUND","message":"게시글이 없습니다."}
+-> 예상 404 NOT_FOUND / 실제 404 NOT_FOUND : PASS
+
+## Bob이 Alice 글에 공백 제목
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <BOB_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"   ","content":"c"}'
+HTTP/1.1 403 
+Content-Type: application/json
+
+{"code":"FORBIDDEN","message":"본인이 작성한 글만 수정·삭제할 수 있습니다."}
+-> 예상 403 FORBIDDEN / 실제 403 FORBIDDEN : PASS
+
+## Alice가 자기 글에 공백 제목
+$ curl -i -X PUT http://127.0.0.1:8000/api/posts/7 -H 'Authorization: Bearer <ALICE_TOKEN>' -H 'Content-Type: application/json' -d '{"title":"   ","content":"c"}'
+HTTP/1.1 400 
+Content-Type: application/json
+
+{"code":"BAD_INPUT","message":"title 입력을 확인하세요."}
+-> 예상 400 BAD_INPUT / 실제 400 BAD_INPUT : PASS
