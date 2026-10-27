@@ -13,21 +13,21 @@ AI 에이전트(Claude Code 등)가 이 저장소에서 작업을 이어갈 때 
 ## 프로젝트 개요
 
 - 서비스: **FixLog** — 개발 중 겪은 오류와 해결 방법을 기록·공유하는 게시판
-- 조합: `frontend-react` (Vite + React) + `backend-spring` (Spring Boot 3.5, JDK 17+, JJWT 0.13) + SQLite 파일 DB
+- 조합: `frontend` (React + Vite, 템플릿 frontend-react) + `backend` (템플릿 backend-spring, Spring Boot 3.5, JDK 17+, JJWT 0.13) + SQLite 파일 DB
 - 요구사항: 누구나 글 읽기, 로그인한 사용자만 작성, 본인 글만 수정·삭제. JWT(HS256) 발급·검증.
 - 테스트 계정: `alice@class.test`(id 1) / `bob@class.test`(id 2), 비밀번호 `Classroom!2026`
 
 ## 폴더 구조
 
 ```
-backend-spring/src/main/java/edu/classroom/board/
+backend/src/main/java/edu/classroom/board/
   AuthService.java     ← 학생 구현: BE-01 issueToken, BE-02 currentUserId, BE-03 assertOwner
   BoardController.java ← 라우트(제공). 인증 → 글 존재 → 권한 → 입력검증 순서로 이미 호출함
   Errors.java          ← ApiError → {code,message} JSON, 401이면 WWW-Authenticate: Bearer (제공)
   Users.java           ← 테스트 계정, PBKDF2 비밀번호 검증 (제공)
   PostStore.java, DatabaseConfig.java ← SQLite (제공)
-backend-spring/src/main/resources/application.properties ← app.jwt.* 가 환경변수와 연결됨
-frontend-react/src/
+backend/src/main/resources/application.properties ← app.jwt.* 가 환경변수와 연결됨
+frontend/src/
   api.js   ← 학생 구현: FE-01 login, FE-02 authorizationHeaders, FE-03 401 처리, FE-04 canEdit
   main.jsx ← 화면. 데모 배너 교체, 비로그인 작성 안내 등
 tools/check_api.py ← 자동 API 검사
@@ -43,19 +43,19 @@ docs/report.pdf    ← 최종 보고서 (아직 없음)
 새 Mac에서 처음 할 일:
 
 ```bash
-# 1) 키 생성 후 backend-spring/.env 에 저장 (.env는 gitignore 대상, 커밋 금지)
+# 1) 키 생성 후 backend/.env 에 저장 (.env는 gitignore 대상, 커밋 금지)
 openssl rand -hex 32
-# backend-spring/.env 내용:
+# backend/.env 내용:
 #   export JWT_SECRET=<생성한 64자리 hex>
 #   export TOKEN_TTL=90
 
-# 2) 백엔드 (backend-spring 폴더에서) → http://127.0.0.1:8000
+# 2) 백엔드 (backend 폴더에서) → http://127.0.0.1:8000
 source .env && ./mvnw spring-boot:run
 
-# 3) 프론트 개발 서버 (frontend-react 폴더에서, 다른 터미널) → http://127.0.0.1:5173
+# 3) 프론트 개발 서버 (frontend 폴더에서, 다른 터미널) → http://127.0.0.1:5173
 npm ci && npm run dev
 
-# 4) 최종 확인용 빌드 (frontend-react) → http://127.0.0.1:4173
+# 4) 최종 확인용 빌드 (frontend) → http://127.0.0.1:4173
 npm run build && npm run preview
 
 # 5) API 자동 검사 (저장소 루트에서)
@@ -64,16 +64,18 @@ python3 tools/check_api.py --mode final     # 구현 후
 python3 tools/check_api.py --mode final --expiry   # TOKEN_TTL=3 으로 서버 재시작 후
 ```
 
-DB 초기화: 서버 종료 후 `backend-spring/data/board.sqlite` 삭제 → 재실행 시 자동 생성.
+DB 초기화: 서버 종료 후 `backend/data/board.sqlite` 삭제 → 재실행 시 자동 생성.
 
 ## 현재 진행 상황 (2026-10-27 기준)
 
 - [x] 조합 선택(React + Spring), 주제 FixLog 확정
 - [x] 시작 코드 상태 확인: `check_api.py --mode starter` 14개 통과, 로그인은 의도대로 501
 - [x] `.gitignore` 정리, 과제 문서를 `docs/etc/`로 이동
-- [x] 이전 세션에서 AI가 전체 구현을 시도했으나 **사용자 요청으로 시작 코드로 원복함**. 현재 TODO는 모두 미구현 상태.
-- [ ] `JWT_SECRET` 생성 및 `.env` 설정 (새 Mac에서 다시 해야 함)
-- [ ] BE-01~03 구현 → FE-01~04 구현 → 테스트·증거 → README·보고서 → 제출
+- [x] 처음 AI가 묻지 않고 구현한 코드는 사용자 요청으로 원복. 이후 사용자가 **명시적으로 요청**해 AI(Claude Code)가 BE-01~03, FE-01~04를 작성 → 커밋 811fa8e. 보고서에는 "AI 작성, 그대로 반영"으로 기록 예정.
+- [x] 검증: `check_api.py --mode final --expiry` 48개 통과, 위조 토큰 11종 401, 403 후 데이터 불변, 재시작 후 글 유지, UI 시나리오(로그인·만료·404·버튼 숨김) 확인
+- [x] 폴더 이름 변경: `frontend-react` → `frontend`, `backend-spring` → `backend`
+- [ ] `JWT_SECRET` 생성 및 `backend/.env` 설정 (새 Mac에서 다시 해야 함)
+- [ ] 사용자 직접 테스트·증거(T01~T17, docs/evidence/) → 루트 README.md → docs/report.pdf → push·LMS 제출
 
 ## 구현 시 핵심 계약 (요약, 상세는 02_API명세.md)
 
