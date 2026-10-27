@@ -1571,7 +1571,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('restartPostId', String(pm.response.json().id));"
+                  "pm.collectionVariables.set('restartPostId', String(pm.response.json().id));",
+                  "pm.collectionVariables.unset('restartSnapshot');"
                 ]
               }
             }
@@ -1592,7 +1593,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('restartSnapshot', pm.response.text());"
+                  "pm.collectionVariables.set('restartSnapshot', pm.response.text());",
+                  "console.log('재시작 전 응답 저장 (id ' + pm.response.json().id + ')');"
                 ]
               }
             }
@@ -1619,7 +1621,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-                  "pm.test('재시작 전과 동일', () => pm.expect(pm.response.text()).to.eql(pm.collectionVariables.get('restartSnapshot')));"
+                  "const snap = pm.collectionVariables.get('restartSnapshot');",
+                  "pm.test('T15-2(재시작 전 조회)를 T15-1 다음에 실행함', () => pm.expect(snap, 'T15-1 → T15-2 → 서버 재시작 → T15-3 순서로 실행하세요').to.be.a('string').and.not.empty);",
+                  "pm.test('재시작 전과 동일 (id·제목·내용·작성자·시각)', () => pm.expect(pm.response.json()).to.eql(JSON.parse(snap || '{}')));"
                 ]
               }
             }
