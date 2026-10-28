@@ -20,7 +20,6 @@
 .
 ├── README.md
 ├── .gitignore
-├── AGENTS.md, CLAUDE.md   # AI 도구용 작업 메모
 ├── frontend/              # React (Vite) 프론트
 │   └── src/api.js, src/main.jsx
 ├── backend/               # Spring Boot 백엔드
@@ -30,9 +29,8 @@
 │   ├── check_api.py       # 과제 제공 API 자동 검사
 │   └── postman/           # T01~T17 Postman 컬렉션
 └── docs/
-    ├── report.pdf
-    ├── evidence/          # 테스트 캡처
-    └── etc/               # 과제 제공 문서
+    ├── report.pdf         # 구현 보고서
+    └── evidence/          # 테스트 캡처
 ```
 
 과제 템플릿의 `frontend-react`, `backend-spring` 폴더를 각각 `frontend`, `backend`로 이름만 바꿨습니다.
@@ -158,7 +156,7 @@ npm run preview
 - 도구와 사용 목적: Claude Code (Claude Opus 5.5). JWT 인증·프론트 연결 코드 생성, 서버 시작 오류 디버깅, Postman 테스트 컬렉션 생성, 과제 요구사항 정리와 보고서·README 초안 작성
 - 반영 위치와 직접 수정·검증한 내용: `AuthService.java`, `api.js`, `main.jsx` 등은 AI가 작성한 코드를 그대로 반영했고, 동작을 질문해 이해한 뒤 T01~T17을 직접 수행해 검증했습니다.
 - 상세 활용 기록: 보고서 5절
-- 참고한 수업 자료·외부 코드·공식 문서: 과제 제공 문서(`docs/etc/`의 과제 공지, API 명세, 구현 체크리스트, 테스트 시나리오, 로컬 실행 안내), 과제 시작 템플릿
+- 참고한 수업 자료·외부 코드·공식 문서: 과제 제공 문서(과제 공지, 공통 API 명세, 구현 체크리스트, 테스트 시나리오, 로컬 실행 안내), 과제 시작 템플릿
 
 ## 제출 확인
 

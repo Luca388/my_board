@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "FixLog T01~T17",
-    "description": "docs/etc/05_테스트시나리오.md의 T01~T17을 순서대로 실행하는 컬렉션입니다.\n\n- 폴더 번호 순서대로 실행합니다. 2번(T10)과 5번(T15 재시작 후) 전에는 터미널에서 서버를 재시작해야 합니다.\n- Alice·Bob 토큰은 컬렉션 Pre-request 스크립트가 자동으로 받아 둡니다.\n- 각 요청의 Test Results 탭에 기대 결과와의 비교(PASS/FAIL)가 나옵니다.\n- T16과 T11의 화면 확인은 브라우저(4173)에서 따로 합니다.\n- 캡처할 때 응답에 나오는 accessToken 원문은 가리세요.",
+    "description": "과제 테스트 시나리오(05_테스트시나리오.md)의 T01~T17을 순서대로 실행하는 컬렉션입니다.\n\n- 폴더 번호 순서대로 실행합니다. 2번(T10)과 5번(T15 재시작 후) 전에는 터미널에서 서버를 재시작해야 합니다.\n- Alice·Bob 토큰은 컬렉션 Pre-request 스크립트가 자동으로 받아 둡니다.\n- 각 요청의 Test Results 탭에 기대 결과와의 비교(PASS/FAIL)가 나옵니다.\n- T16과 T11의 화면 확인은 브라우저(4173)에서 따로 합니다.\n- 캡처할 때 응답에 나오는 accessToken 원문은 가리세요.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
