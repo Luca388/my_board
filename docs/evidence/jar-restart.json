@@ -1,0 +1,30 @@
+{
+  "command": "source .env && java -jar target/jwt-board-1.0.0.jar",
+  "port": 8000,
+  "postBeforeRestart": {
+    "id": 8,
+    "title": "JAR 재시작 확인",
+    "content": "서버를 실제 재시작한 뒤 보존을 확인하고 삭제하는 임시 글입니다.",
+    "authorId": 1,
+    "authorName": "Alice",
+    "createdAt": "2026-10-28T12:40:06.691426Z",
+    "updatedAt": "2026-10-28T12:40:06.691426Z"
+  },
+  "postAfterRestart": {
+    "id": 8,
+    "title": "JAR 재시작 확인",
+    "content": "서버를 실제 재시작한 뒤 보존을 확인하고 삭제하는 임시 글입니다.",
+    "authorId": 1,
+    "authorName": "Alice",
+    "createdAt": "2026-10-28T12:40:06.691426Z",
+    "updatedAt": "2026-10-28T12:40:06.691426Z"
+  },
+  "identical": true,
+  "testPostDeleted": true,
+  "previewHealthURL": "http://127.0.0.1:4173/api/health",
+  "previewHealthStatus": 200,
+  "previewHealthBody": {
+    "status": "ok",
+    "stack": "spring"
+  }
+}

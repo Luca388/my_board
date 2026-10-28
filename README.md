@@ -8,6 +8,7 @@
 - 서비스 목적과 대상 사용자: 개발을 공부하는 학생과 개발자가 직접 겪은 오류의 증상, 원인, 해결 방법을 기록하고 서로 공유하는 서비스입니다. 다른 사람의 기록은 로그인 없이 읽을 수 있지만, 기록을 남기려면 로그인해야 합니다. 기록의 작성자를 신뢰할 수 있도록 작성자는 서버가 JWT로 확인하며, 본인이 쓴 기록만 수정·삭제할 수 있습니다.
 - 선택한 기술: React + Spring Boot
 - 주요 기능: 공개 목록·상세 조회, 로그인과 JWT 발급, 내 정보 조회, 로그인 사용자의 글 작성, 본인 글 수정·삭제, 토큰 만료·로그아웃 처리, 응답 코드별 오류 안내
+- 구현·실행 검증 기준 커밋: `d064634dc812f2f3beea81d86de123d804c64778` (보고서와 동일). 이 기준 이후 변경은 README·보고서·검증 기록에 한정됩니다.
 
 ## 보고서와 테스트 증거
 
@@ -77,6 +78,22 @@ $env:TOKEN_TTL = "90"
 .\mvnw.cmd spring-boot:run
 ```
 
+위 명령은 개발 중 실행 방법입니다. 수업의 최종 실행 안내에 따른 JAR 빌드·실행은 기존 백엔드를 Ctrl+C로 종료한 뒤 `backend` 폴더에서 진행합니다. JWT 키와 환경변수는 앞 단계에서 준비한 것을 사용합니다.
+
+macOS / Linux:
+
+```sh
+./mvnw package
+source .env && java -jar target/jwt-board-1.0.0.jar
+```
+
+Windows PowerShell에서는 위의 `$env:JWT_SECRET`, `$env:TOKEN_TTL`을 설정한 같은 터미널에서 실행합니다.
+
+```powershell
+.\mvnw.cmd package
+java -jar target/jwt-board-1.0.0.jar
+```
+
 - 환경설정 예시 파일: `backend/env.example.txt`
 - JWT_SECRET 설정 방법: 위 명령으로 새 키를 만들어 환경변수로 주입합니다. Spring은 `.env`를 자동으로 읽지 않으므로 macOS/Linux에서는 서버를 실행하는 터미널에서 `source .env`를 먼저 실행해야 합니다. 새 터미널을 열면 다시 `source .env`가 필요합니다.
 - 키가 없거나, 과제 예시 키이거나, 64자리 16진수가 아니면 서버가 시작되지 않습니다(의도된 동작).
@@ -141,12 +158,28 @@ npm run preview
 - 토큰 없음·변조·만료 확인 결과: 토큰 없음 401 TOKEN_REQUIRED, 서명을 바꾼 토큰 401 INVALID_TOKEN, TTL 3초로 발급 후 만료된 토큰 401 TOKEN_EXPIRED였고, 만료 시 화면은 로그아웃 상태로 바뀌었습니다.
 - 전체 T01~T17 결과와 증거: [보고서 4절](docs/report.pdf), [테스트 캡처](docs/evidence/)
 
+자동 API 검사는 Python 3가 필요하며, 백엔드를 실행해 둔 상태에서 **저장소 루트**의 새 터미널에서 실행합니다. Windows에서는 `python3` 대신 `py`를 사용할 수 있습니다.
+
+```sh
+python3 tools/check_api.py --mode final
+```
+
+만료 검사에서는 먼저 기존 백엔드를 종료하고, 앞서 안내한 `TOKEN_TTL=3` 설정으로 다시 실행한 뒤 저장소 루트에서 실행합니다.
+
+```sh
+python3 tools/check_api.py --mode final --expiry
+```
+
+자동 검사는 수동 화면 검사와 실제 서버 재시작 검사를 대신하지 않습니다. 새 clone에서 기본 검사 40개와 만료 포함 검사 48개가 통과했으며, 화면 CRUD·새로고침·만료 처리와 재시작 후 데이터 유지도 별도로 확인했습니다.
+
+최종 JAR 실행을 확인한 기록은 [빌드·서버 시작 로그](docs/evidence/local-build.txt), [4173 프록시 경유 API 검사](docs/evidence/api-final.txt), [4173 API 연결·JAR 재시작 유지 결과](docs/evidence/jar-restart.json)에 있습니다.
+
 ## 핵심 구현 설명
 
 1. **로그인과 발급:** 서버 시작 시 `AuthService` 생성자가 `JWT_SECRET`을 검사하고 32바이트 서명 키를 만듭니다. 로그인 요청은 비밀번호 확인 후 `issueToken()`이 HS256 토큰(sub, iss, aud, exp)을 발급합니다.
 2. **토큰 보관과 전송:** 프론트 `api.js`의 `login()`이 토큰과 사용자 정보를 메모리 변수에만 저장합니다(localStorage 미사용, 새로고침하면 로그아웃). `authorizationHeaders()`가 토큰이 있을 때만 `Authorization: Bearer` 헤더를 붙입니다.
 3. **서버 검증:** `currentUserId()`가 헤더 형식, 서명·발급자·사용 대상·만료, 알고리즘(HS256), exp 존재, sub와 실제 계정을 확인한 뒤 검증된 사용자 id만 넘깁니다.
-4. **작성자 권한:** 수정·삭제는 인증 → 글 존재 확인 → `assertOwner()` 작성자 비교 → 입력 검증 순서로 처리하며, 작성자가 다르면 403입니다. 프론트 `canEdit()`은 버튼 표시만 담당합니다.
+4. **작성자 권한:** 수정은 인증 → 글 존재 확인 → `assertOwner()` 작성자 비교 → 입력 검증 순서로 처리합니다. 삭제는 작성자 비교까지 검사한 뒤 삭제하며, 작성자가 다르면 둘 다 403입니다. 프론트 `canEdit()`은 버튼 표시만 담당합니다.
 
 상세 코드 설명은 보고서 3절에 있습니다.
 
@@ -154,6 +187,7 @@ npm run preview
 
 - AI 사용 여부: 사용
 - 도구와 사용 목적: Claude Code (Claude Opus 5.5). JWT 인증·프론트 연결 코드 생성, 서버 시작 오류 디버깅, Postman 테스트 컬렉션 생성, 과제 요구사항 정리와 보고서·README 초안 작성
+- Codex 활용: GPT-6.1 Sol / High. 보고서 검수 및 다듬기
 - 반영 위치와 직접 수정·검증한 내용: `AuthService.java`, `api.js`, `main.jsx` 등은 AI가 작성한 코드를 그대로 반영했고, 동작을 질문해 이해한 뒤 T01~T17을 직접 수행해 검증했습니다.
 - 상세 활용 기록: 보고서 5절
 - 참고한 수업 자료·외부 코드·공식 문서: 과제 제공 문서(과제 공지, 공통 API 명세, 구현 체크리스트, 테스트 시나리오, 로컬 실행 안내), 과제 시작 템플릿
