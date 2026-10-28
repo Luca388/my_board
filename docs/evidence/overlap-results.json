@@ -1,0 +1,50 @@
+{
+  "executedAt": "2026-10-28T15:29:42.555866+09:00",
+  "executedBy": "OpenAI Codex automated API verification",
+  "base": "http://127.0.0.1:18000/api",
+  "tokenTTLSeconds": 90,
+  "cases": [
+    {
+      "condition": "토큰 없이 없는 글 수정",
+      "method": "PUT",
+      "path": "/api/posts/9007199254740991",
+      "authorizationPresent": false,
+      "status": 401,
+      "code": "TOKEN_REQUIRED",
+      "wwwAuthenticate": "Bearer",
+      "result": "PASS"
+    },
+    {
+      "condition": "정상 토큰으로 같은 없는 글 수정",
+      "method": "PUT",
+      "path": "/api/posts/9007199254740991",
+      "authorizationPresent": true,
+      "status": 404,
+      "code": "NOT_FOUND",
+      "wwwAuthenticate": null,
+      "result": "PASS"
+    },
+    {
+      "condition": "Bob이 Alice 글에 공백 제목 제출",
+      "method": "PUT",
+      "path": "/api/posts/9",
+      "authorizationPresent": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "wwwAuthenticate": null,
+      "result": "PASS"
+    },
+    {
+      "condition": "Alice가 본인 글에 공백 제목 제출",
+      "method": "PUT",
+      "path": "/api/posts/9",
+      "authorizationPresent": true,
+      "status": 400,
+      "code": "BAD_INPUT",
+      "wwwAuthenticate": null,
+      "result": "PASS"
+    }
+  ],
+  "unchangedAfterRejectedRequests": true,
+  "testPostDeleted": true
+}
