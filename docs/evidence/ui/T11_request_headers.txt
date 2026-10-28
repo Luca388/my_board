@@ -1,6 +1,0 @@
-# T11 로그아웃 후 /me — 브라우저가 실제로 보낸 Authorization 헤더 기록
-# 4173 빌드 화면에서 fetch 호출을 감싸 요청 헤더만 기록함(앱 코드는 변경하지 않음). 토큰은 앞부분만 남기고 가림.
-POST /api/auth/login | Authorization: (헤더 없음) | → 200      ← Bob 로그인
-GET /api/me | Authorization: Bearer eyJhbGciOi...(가림) | → 200 ← 로그인 상태의 내 정보 조회
-GET /api/me | Authorization: (헤더 없음) | → 401             ← 로그아웃 후 내 정보 조회 (TOKEN_REQUIRED)
-화면: 로그아웃 상태 | 로그인이 필요합니다. 로그인한 뒤 다시 시도하세요.
